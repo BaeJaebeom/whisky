@@ -1,0 +1,9 @@
+{{- with . }}
+<ul class="rows">
+  {{- range . }}
+  <li>{{ partial "row.html" . }}</li>
+  {{- end }}
+</ul>
+{{- else }}
+<p class="empty">아직 글이 없습니다.</p>
+{{- end -}}

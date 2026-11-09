@@ -1,0 +1,10 @@
+{{ define "main" }}
+<section class="panel list-panel">
+  {{ partial "breadcrumb.html" . }}
+  {{ $pages := .Pages.ByDate.Reverse }}
+  {{ $pager := .Paginate $pages 10 }}
+  <h1 class="list-title">#{{ .LinkTitle }} <span class="count">{{ len $pages }}</span></h1>
+  {{ partial "rows.html" $pager.Pages }}
+  {{ partial "pager.html" $pager }}
+</section>
+{{ end }}

@@ -1,0 +1,47 @@
+{{ define "main" }}
+{{- /*
+  검색(Pagefind)은 리뷰 화면의 이 article 안만 색인한다. 사이드바·목록·태그 화면은 색인하지 않는다.
+  위치 표시·제목·작성일·태그 칩은 본문 색인에서 빼서 "걸린 문장"에 섞이지 않게 하고,
+  제목·태그·분류 이름은 아래 메타데이터로 넣어 계속 검색되게 한다. (메타데이터도 검색 대상이다)
+*/}}
+{{- if .Date.IsZero }}{{ errorf "%s: date 가 없습니다. 글 맨 위에 date: 2026-11-04 처럼 작성일을 적어 주세요." .File.Path }}{{ end }}
+<article class="panel review" data-pagefind-body>
+  {{ partial "breadcrumb.html" . }}
+  <h1 data-pagefind-ignore>{{ .Title }}</h1>
+  <time class="review-date" datetime="{{ .Date.Format "2006-01-02" }}" data-pagefind-ignore data-pagefind-sort="date[datetime]" data-pagefind-meta="date[datetime]">{{ .Date.Format "2006-01-02" }}</time>
+  {{- $tags := partial "tags.html" . }}
+  {{- with $tags }}
+  <ul class="post-tags" aria-label="태그" data-pagefind-ignore>
+    {{- range . }}
+    <li><a class="tag-chip" href="{{ .RelPermalink }}">#{{ .LinkTitle }}</a></li>
+    {{- end }}
+  </ul>
+  {{- end }}
+  {{- with partial "cover.html" . }}{{ with .Filter images.AutoOrient (images.Process "fit 1200x1200") }}
+  <img class="cover" src="{{ .RelPermalink }}" width="{{ .Width }}" height="{{ .Height }}" alt="{{ $.Title }}">
+  {{- end }}{{ end }}
+  {{ partial "info-table.html" . }}
+  <div class="review-body">{{ .Content }}</div>
+  {{- /*
+    검색 결과 목록에 쓰는 값과 거르기 조건. 화면에는 보이지 않는다.
+    - tag: 소문자로 맞춘 태그 (Sherry 와 sherry 를 같은 태그로)
+    - section: 이 글이 속한 분류 주소들 (분류 화면 안에서만 찾기)
+    - tags, path: 태그 이름과 분류 이름. 글자 검색용
+    - line: 목록 줄의 "캐스크 · 도수"
+    - thumb: 썸네일 파일 이름만. 메타데이터도 검색되므로 주소 전체를 넣지 않는다. 화면에서 글 주소와 합친다.
+    - image: 빈 값. Pagefind 는 본문 첫 사진 주소를 image 메타로 자동 저장하고 그것도 검색하므로
+      ("whisky", "scotch" 로 사진 있는 글만 걸림) 빈 값으로 덮는다.
+  */}}
+  <div hidden data-pagefind-ignore>
+    {{- range $tags }}<span data-pagefind-filter="tag:{{ lower .LinkTitle }}"></span>{{ end }}
+    {{- range .Ancestors }}{{ if .IsSection }}<span data-pagefind-filter="section:{{ .RelPermalink }}"></span>{{ end }}{{ end }}
+    {{- $tagNames := slice }}{{ range $tags }}{{ $tagNames = $tagNames | append .LinkTitle }}{{ end }}
+    {{- with $tagNames }}<span data-pagefind-meta="tags:{{ delimit . " " }}"></span>{{ end }}
+    {{- $sectionNames := slice }}{{ range .Ancestors.Reverse }}{{ if .IsSection }}{{ $sectionNames = $sectionNames | append .LinkTitle }}{{ end }}{{ end }}
+    {{- with $sectionNames }}<span data-pagefind-meta="path:{{ delimit . " " }}"></span>{{ end }}
+    <span data-pagefind-meta="line:{{ partial "meta.html" . }}"></span>
+    {{- with partial "cover-thumb.html" . }}<span data-pagefind-meta="thumb:{{ path.Base .RelPermalink }}"></span>{{ end }}
+    <span data-pagefind-meta="image:"></span>
+  </div>
+</article>
+{{ end }}

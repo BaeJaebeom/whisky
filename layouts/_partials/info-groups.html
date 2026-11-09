@@ -1,0 +1,48 @@
+{{- /*
+  리뷰 정보 표의 묶음. 글 원문의 front matter 를 줄 단위로 읽어
+  적은 순서대로 항목을 모으고, 빈 줄에서 묶음을 나눈다.
+  Hugo 는 front matter 를 읽으면서 순서와 빈 줄을 버리기 때문에 원문을 직접 읽는다.
+  돌려주는 값: [{rows: [{key, value}, …]}, …]  (value 가 비어 있으면 "")
+  글마다 여러 번 쓰이므로 partialCached "info-groups.html" . .Path 로 부른다.
+*/ -}}
+{{- /* 표에 넣지 않는 키: 글 설정(draft·title·date·태그)과 Hugo 가 쓰는 영어 예약 키(소문자). */ -}}
+{{- $skip := slice "draft" "title" "date" "태그"
+  "aliases" "build" "cascade" "description" "expirydate" "headless" "iscjklanguage" "keywords"
+  "lastmod" "layout" "linktitle" "markup" "menu" "menus" "outputs" "params" "publishdate"
+  "resources" "sitemap" "slug" "summary" "translationkey" "type" "url" "weight" -}}
+{{- $groups := slice -}}
+{{- $rows := slice -}}
+{{- $state := 0 -}}{{- /* 0: front matter 전, 1: front matter 안, 2: 끝 */ -}}
+{{- range split (os.ReadFile .File.Filename) "\n" -}}
+  {{- if eq $state 2 }}{{ break }}{{ end -}}
+  {{- $line := strings.TrimRight " \t\r" . -}}
+  {{- if eq $line "---" -}}
+    {{- $state = add $state 1 -}}
+  {{- else if eq $state 1 -}}
+    {{- if eq $line "" -}}
+      {{- with $rows }}{{ $groups = $groups | append (dict "rows" .) }}{{ end -}}
+      {{- $rows = slice -}}
+    {{- else if and (strings.Contains $line ":") (not (findRE `^[\s#-]` $line 1)) -}}
+      {{- $parts := split $line ":" -}}
+      {{- /* "인용 키": 값 처럼 따옴표로 감싼 키도 받는다. */ -}}
+      {{- $key := trim (trim (index $parts 0) " \t") `"'` -}}
+      {{- if not (in $skip (lower $key)) -}}
+        {{- $parsed := index $.Params (lower $key) -}}
+        {{- $value := "" -}}
+        {{- if in (slice "int" "int64" "uint64" "float64" "bool") (printf "%T" $parsed) -}}
+          {{- /* 숫자·참거짓은 Hugo 가 읽으면서 43.0 → 43 처럼 바꾸므로 적은 글자 그대로 쓴다. (뒤의 # 주석은 뺀다) */ -}}
+          {{- $value = trim (index (split (delimit (after 1 $parts) ":") " #") 0) " \t" -}}
+        {{- else -}}
+          {{- $value = partial "value.html" (dict "value" $parsed "key" $key "path" $.File.Path) -}}
+        {{- end -}}
+        {{- $rows = $rows | append (dict "key" $key "value" $value) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- /* os.ReadFile 은 프로젝트 폴더 밖 파일이나 형식이 다른 파일을 빈 값으로 돌려준다. 표가 조용히 사라지지 않게 멈춘다. */ -}}
+{{- if ne $state 2 -}}
+  {{- errorf "%s: 정보 표를 만들 front matter 를 읽지 못했습니다. 글 맨 위를 --- 로 시작해 --- 로 닫았는지, 글이 프로젝트 폴더 안에 있는지 확인해 주세요." .File.Path -}}
+{{- end -}}
+{{- with $rows }}{{ $groups = $groups | append (dict "rows" .) }}{{ end -}}
+{{- return $groups -}}

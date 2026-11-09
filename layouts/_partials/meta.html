@@ -1,0 +1,8 @@
+{{- /* 목록 줄의 "캐스크 · 도수" 값. 정보 표와 같은 값(글에 적은 글자 그대로)을 쓰고, 빈 값은 뺀다. */ -}}
+{{- $parts := slice -}}
+{{- range $key := slice "캐스크" "도수" -}}
+  {{- range partialCached "info-groups.html" $ $.Path -}}
+    {{- range .rows }}{{ if and (eq .key $key) .value }}{{ $parts = $parts | append .value }}{{ end }}{{ end -}}
+  {{- end -}}
+{{- end -}}
+{{- return delimit $parts " · " -}}

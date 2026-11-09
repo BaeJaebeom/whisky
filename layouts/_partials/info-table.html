@@ -1,0 +1,12 @@
+{{- /* 글에 적은 순서와 빈 줄 그대로 묶음별로 그린다. 비어 있는 값은 "—"로 보여 준다. */ -}}
+{{- with partialCached "info-groups.html" . .Path }}
+<table class="info">
+  {{- range . }}
+  <tbody>
+    {{- range .rows }}
+    <tr><th scope="row">{{ .key }}</th><td{{ if not .value }} class="is-empty"{{ end }}>{{ or .value "—" }}</td></tr>
+    {{- end }}
+  </tbody>
+  {{- end }}
+</table>
+{{- end -}}

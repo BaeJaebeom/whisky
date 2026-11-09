@@ -1,0 +1,11 @@
+{{- /* 목록 한 줄. assets/js/search.js 의 row() 와 같은 구조를 유지한다. 대표 사진이 없으면 사진 자리를 두지 않는다. */ -}}
+<a class="row" href="{{ .RelPermalink }}">
+  {{- with partial "cover-thumb.html" . }}
+  <img class="thumb" src="{{ .RelPermalink }}" width="80" height="80" alt="" loading="lazy">
+  {{- end }}
+  <span class="row-body">
+    <span class="row-title">{{ .LinkTitle }}</span>
+    <span class="row-meta">{{ partial "meta.html" . }}</span>
+  </span>
+  <time class="row-date" datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+</a>

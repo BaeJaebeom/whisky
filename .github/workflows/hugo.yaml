@@ -1,0 +1,85 @@
+name: Build and deploy
+env:
+  HUGO_VERSION: 0.169.0
+  PAGEFIND_VERSION: 1.6.0
+  TZ: Asia/Seoul
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+# 빌드 단계는 읽기만 한다. 배포 권한은 deploy 단계에만 준다.
+# (빌드 단계에서는 npx 로 받은 외부 코드가 돌기 때문에 배포 토큰을 주지 않는다)
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v6
+
+      - name: Install Hugo
+        run: |
+          echo "Installing Hugo ${HUGO_VERSION}..."
+          mkdir -p "${HOME}/.local/hugo"
+          curl -sfL --output-dir "${{ runner.temp }}" -O "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_linux-amd64.tar.gz"
+          tar -C "${HOME}/.local/hugo" -xf "${{ runner.temp }}/hugo_${HUGO_VERSION}_linux-amd64.tar.gz"
+          echo "${HOME}/.local/hugo" >> "${GITHUB_PATH}"
+
+      - name: Cache restore
+        id: cache-restore
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/.cache/hugo
+          key: hugo-${{ github.run_id }}
+          restore-keys: hugo-
+
+      - name: Build
+        run: |
+          hugo build \
+            --gc \
+            --minify \
+            --baseURL "${{ steps.pages.outputs.base_url }}/" \
+            --cacheDir "${{ runner.temp }}/.cache/hugo"
+
+      - name: Build search index
+        run: npx --yes "pagefind@${PAGEFIND_VERSION}" --site public
+
+      - name: Cache save
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/.cache/hugo
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          include-hidden-files: false
+          path: ./public
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,14 @@
+{{- /*
+  대표 사진(cover.*) 원본을 돌려준다. 없으면 false.
+  쓰는 쪽에서 .Filter images.AutoOrient (images.Process "...") 로 방향 맞추기와 크기 조절을 한 번에 한다.
+  (따로 하면 원본 크기 중간본을 한 번 더 인코딩하게 된다)
+*/ -}}
+{{- $img := false -}}
+{{- with .Resources.GetMatch "cover.*" -}}
+  {{- if reflect.IsImageResourceProcessable . -}}
+    {{- $img = . -}}
+  {{- else -}}
+    {{- errorf "%s: 대표 사진 %q 은(는) 웹용으로 줄일 수 없는 형식입니다. JPG, PNG, WebP로 바꿔 올려 주세요." $.File.Path .Name -}}
+  {{- end -}}
+{{- end -}}
+{{- return $img -}}

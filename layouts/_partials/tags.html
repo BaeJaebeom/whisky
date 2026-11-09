@@ -1,0 +1,17 @@
+{{- /*
+  글의 태그 페이지 목록.
+  - 대괄호 없이 쉼표로 적으면 태그 하나로 묶여 버리므로 빌드를 멈춘다.
+  - 대괄호 안이라도 태그 이름에 쉼표가 있으면 주소(?tags=a,b)에서 둘로 쪼개지므로 멈춘다.
+*/ -}}
+{{- with .Params.태그 -}}
+  {{- if reflect.IsSlice . -}}
+    {{- range . -}}
+      {{- if strings.Contains (string .) "," -}}
+        {{- errorf "%s: 태그 %q 에 쉼표가 있습니다. 태그 이름에는 쉼표를 쓸 수 없습니다." $.File.Path . -}}
+      {{- end -}}
+    {{- end -}}
+  {{- else if strings.Contains (string .) "," -}}
+    {{- errorf "%s: 태그는 [셰리, 버번] 처럼 대괄호로 감싸 주세요. 지금 값: %q" $.File.Path . -}}
+  {{- end -}}
+{{- end -}}
+{{- return .GetTerms "태그" -}}
