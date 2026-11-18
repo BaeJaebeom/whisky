@@ -1,0 +1,2 @@
+{{- $isFocus := and .focus (.page.Eq .focus) -}}
+<a class="tree-link{{ if $isFocus }} is-current{{ end }}" href="{{ .page.RelPermalink }}"{{ if .page.Eq .current }} aria-current="page"{{ end }}>{{ .page.LinkTitle }} <span class="count">({{ len .page.RegularPagesRecursive }})</span></a>

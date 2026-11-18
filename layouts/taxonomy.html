@@ -1,0 +1,11 @@
+{{ define "main" }}
+<section class="panel list-panel">
+  {{ partial "breadcrumb.html" . }}
+  <h1 class="list-title">태그 <span class="count">{{ len .Data.Terms }}</span></h1>
+  {{ with .Data.Terms }}
+  {{ partial "tag-cloud.html" (dict "current" $ "limit" 0) }}
+  {{ else }}
+  <p class="empty">아직 태그가 없습니다.</p>
+  {{ end }}
+</section>
+{{ end }}

@@ -1,0 +1,30 @@
+{{- /*
+  태그 모음. 글이 많이 달린 태그부터, 많을수록 크고 밝게(4단계) 그린다.
+  단계는 "서로 다른 글 수"의 순위로 나눈다. 최소~최대를 그대로 나누면 태그 하나만 글이 많을 때
+  나머지가 모두 가장 작은 단계로 몰리기 때문이다. 글 수가 같으면 단계도 같다.
+  .current: 지금 보고 있는 페이지 (그 태그를 강조), .limit: 0 보다 크면 그만큼만 보여 주고 "모든 태그" 링크를 단다.
+*/ -}}
+{{- with index site.Taxonomies "태그" -}}
+  {{- $terms := .ByCount -}}
+  {{- $counts := slice -}}
+  {{- range $terms }}{{ if not (in $counts .Count) }}{{ $counts = $counts | append .Count }}{{ end }}{{ end -}}
+  {{- $levels := newScratch -}}
+  {{- $n := len $counts -}}
+  {{- range $i, $c := $counts -}}
+    {{- $level := 2 -}}
+    {{- if gt $n 1 }}{{ $level = add 1 (int (math.Floor (div (mul 3.0 (sub (sub $n 1) $i)) (sub $n 1)))) }}{{ end -}}
+    {{- $levels.Set (string $c) $level -}}
+  {{- end -}}
+  {{- $shown := $terms -}}
+  {{- if and (gt $.limit 0) (gt (len $terms) $.limit) }}{{ $shown = first $.limit $terms }}{{ end }}
+<ul class="tag-cloud">
+  {{- range $shown }}
+  <li><a class="tag tag-{{ $levels.Get (string .Count) }}{{ if .Page.Eq $.current }} is-current{{ end }}" href="{{ .Page.RelPermalink }}" data-tag="{{ .Page.LinkTitle }}" title="글 {{ .Count }}개">#{{ .Page.LinkTitle }}</a></li>
+  {{- end }}
+</ul>
+  {{- if lt (len $shown) (len $terms) }}
+  {{- with site.GetPage "/태그" }}
+<a class="tag-more" href="{{ .RelPermalink }}">모든 태그 ({{ len $terms }})</a>
+  {{- end }}
+  {{- end }}
+{{- end -}}

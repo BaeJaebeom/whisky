@@ -1,0 +1,15 @@
+{{- /*
+  서로 다른 태그가 같은 주소가 되면(예: "40%" 와 "40" → /tags/40/) 한쪽 태그 화면이 사라진다.
+  Hugo 는 경고만 내므로 여기서 빌드를 멈춘다. 사이트 전체에서 한 번만 돌도록 partialCached 로 부른다.
+*/ -}}
+{{- $seen := newScratch -}}
+{{- with index site.Taxonomies "태그" -}}
+  {{- range .ByCount -}}
+    {{- $url := .Page.RelPermalink -}}
+    {{- $name := .Page.LinkTitle -}}
+    {{- with $seen.Get $url -}}
+      {{- errorf "태그 %q 와 %q 가 같은 주소(%s)가 됩니다. %% 같은 기호는 주소에서 빠지니, 한쪽 태그 이름을 바꿔 주세요." . $name $url -}}
+    {{- end -}}
+    {{- $seen.Set $url $name -}}
+  {{- end -}}
+{{- end -}}

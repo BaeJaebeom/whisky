@@ -1,0 +1,25 @@
+{{- /* 분류 트리. 폴더 깊이에 상관없이 자기 자신을 다시 불러 그린다. 공개 글이 없는 분류는 숨긴다. */ -}}
+{{- $current := .current -}}
+{{- $focus := .focus -}}
+{{- $items := slice -}}
+{{- range .node.Sections.ByWeight -}}
+  {{- if .RegularPagesRecursive }}{{ $items = $items | append . }}{{ end -}}
+{{- end -}}
+{{- with $items }}
+<ul>
+  {{- range . }}
+  {{- $hasChildren := false -}}
+  {{- range .Sections }}{{ if .RegularPagesRecursive }}{{ $hasChildren = true }}{{ end }}{{ end }}
+  <li>
+    {{- if $hasChildren }}
+    <details{{ if or (.Eq $current) (.IsAncestor $current) }} open{{ end }}>
+      <summary>{{ partial "tree-link.html" (dict "page" . "current" $current "focus" $focus) }}</summary>
+      {{ partial "tree.html" (dict "node" . "current" $current "focus" $focus) }}
+    </details>
+    {{- else }}
+    {{ partial "tree-link.html" (dict "page" . "current" $current "focus" $focus) }}
+    {{- end }}
+  </li>
+  {{- end }}
+</ul>
+{{- end -}}

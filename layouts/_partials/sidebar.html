@@ -1,0 +1,18 @@
+{{- /* 강조할 분류: 분류 화면은 자기 자신, 리뷰 화면은 리뷰가 속한 분류 */ -}}
+{{- $focus := . -}}
+{{- if .IsPage }}{{ $focus = .Parent }}{{ end -}}
+<form class="search-form" role="search">
+  <input type="search" name="q" placeholder="검색" aria-label="리뷰 검색" autocomplete="off" data-pagefind="{{ "pagefind/pagefind.js" | relURL }}" data-base="{{ site.Home.RelPermalink }}">
+  <button type="button" class="search-clear" aria-label="검색어 지우기" hidden>
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+  </button>
+</form>
+<nav class="tree" aria-label="분류">
+  {{ partial "tree-link.html" (dict "page" site.Home "current" . "focus" $focus) }}
+  {{ partial "tree.html" (dict "node" site.Home "current" . "focus" $focus) }}
+</nav>
+{{- with index site.Taxonomies "태그" }}
+<section class="sidebar-tags" aria-label="태그">
+  {{ partial "tag-cloud.html" (dict "current" $ "limit" 30) }}
+</section>
+{{- end }}

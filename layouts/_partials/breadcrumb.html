@@ -1,0 +1,5 @@
+{{- with .Ancestors.Reverse }}
+<nav class="breadcrumb" aria-label="위치" data-pagefind-ignore>
+  {{- range $i, $p := . }}{{ if $i }} › {{ end }}<a href="{{ $p.RelPermalink }}">{{ $p.LinkTitle }}</a>{{ end -}}
+</nav>
+{{- end -}}

@@ -1,0 +1,21 @@
+{{- /*
+  목록 아래 페이지 번호. 한 쪽뿐이면 그리지 않는다.
+  첫 쪽, 마지막 쪽, 지금 쪽 앞뒤 2쪽만 보여 주고 사이는 … 으로 줄인다. (assets/js/search.js 의 pageNumbers 와 같은 규칙)
+*/ -}}
+{{- if gt .TotalPages 1 }}
+{{- $current := .PageNumber -}}
+{{- $last := .TotalPages -}}
+{{- $shown := 0 -}}
+<nav class="pager" aria-label="페이지">
+  {{- with .Prev }}<a class="pager-link" href="{{ .URL }}" aria-label="이전 페이지">‹</a>{{ else }}<span class="pager-link is-disabled" aria-hidden="true">‹</span>{{ end }}
+  {{- range .Pagers }}
+  {{- $n := .PageNumber -}}
+  {{- if or (eq $n 1) (eq $n $last) (le (math.Abs (sub $n $current)) 2) }}
+  {{- if gt (sub $n $shown) 1 }}<span class="pager-gap" aria-hidden="true">…</span>{{ end }}
+  <a class="pager-link{{ if eq $n $current }} is-current{{ end }}" href="{{ .URL }}"{{ if eq $n $current }} aria-current="page"{{ end }}>{{ $n }}</a>
+  {{- $shown = $n -}}
+  {{- end }}
+  {{- end }}
+  {{- with .Next }}<a class="pager-link" href="{{ .URL }}" aria-label="다음 페이지">›</a>{{ else }}<span class="pager-link is-disabled" aria-hidden="true">›</span>{{ end }}
+</nav>
+{{- end -}}

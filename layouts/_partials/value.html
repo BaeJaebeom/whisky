@@ -1,0 +1,18 @@
+{{- /*
+  front matter 값 하나(.value)를 화면용 글자로 바꾼다. 값이 없으면 "".
+  0, false 같은 값도 그대로 보여 준다. (숫자·참거짓은 info-groups.html 이 원문 글자로 따로 처리한다)
+  여러 줄 묶음(map)은 표 한 칸에 담을 수 없으므로 글 경로(.path)와 항목 이름(.key)을 알려 주고 멈춘다.
+*/ -}}
+{{- $v := .value -}}
+{{- $out := "" -}}
+{{- if reflect.IsMap $v -}}
+  {{- errorf "%s: %q 값은 한 줄로 적어 주세요. 들여 쓴 여러 줄 묶음은 정보 표에 쓸 수 없습니다." .path .key -}}
+{{- else if reflect.IsSlice $v -}}
+  {{- range $v }}{{ if reflect.IsMap . }}{{ errorf "%s: %q 값은 한 줄로 적어 주세요. 들여 쓴 여러 줄 묶음은 정보 표에 쓸 수 없습니다." $.path $.key }}{{ end }}{{ end -}}
+  {{- $out = delimit $v ", " -}}
+{{- else if eq (printf "%T" $v) "time.Time" -}}
+  {{- $out = $v.Format "2006-01-02" -}}
+{{- else if not (eq $v nil) -}}
+  {{- $out = string $v -}}
+{{- end -}}
+{{- return $out -}}

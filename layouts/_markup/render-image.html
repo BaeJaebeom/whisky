@@ -1,0 +1,14 @@
+{{- $u := urls.Parse .Destination -}}
+{{- if $u.IsAbs -}}
+<img src="{{ .Destination }}" alt="{{ .PlainText }}" loading="lazy">
+{{- else -}}
+  {{- $img := .Page.Resources.Get $u.Path -}}
+  {{- if not $img -}}
+    {{- errorf "%s: 본문에 적은 사진 %q 이(가) 글 폴더에 없습니다." .Page.File.Path .Destination -}}
+  {{- else if not (reflect.IsImageResourceProcessable $img) -}}
+    {{- errorf "%s: 사진 %q 은(는) 웹용으로 줄일 수 없는 형식입니다. JPG, PNG, WebP로 바꿔 올려 주세요." .Page.File.Path .Destination -}}
+  {{- else -}}
+    {{- $img = $img.Filter images.AutoOrient (images.Process "fit 1600x1600") -}}
+<img src="{{ $img.RelPermalink }}" width="{{ $img.Width }}" height="{{ $img.Height }}" alt="{{ .PlainText }}" loading="lazy">
+  {{- end -}}
+{{- end -}}

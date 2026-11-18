@@ -1,0 +1,260 @@
+:root {
+  color-scheme: dark;
+  --bg: #27292c;
+  --fg: #e8e6e3;
+  --muted: #a3a09b;
+  --panel: #313337;
+  --panel-border: #46484e;
+  --hover: #3d3f44;
+  --inset: #2a2c2f;
+  --accent: #fb7185;
+  --accent-soft: rgba(251, 113, 133, .16);
+  /* 강조된 항목의 글자색. --accent 는 어두운 바탕 위 글자로 쓰기엔 대비(3.7:1)가 모자라 더 밝은 로즈(5.3:1)를 쓴다 */
+  --accent-text: #fda4af;
+  --on-accent: #2b1516;
+  --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--fg);
+  background: var(--bg);
+  font: 16px/1.65 var(--font);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ---------- 틀: 메뉴, 목록, 리뷰를 각각 패널에 담는다 ---------- */
+.layout {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.panel {
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
+}
+
+/* 메뉴·목록·태그에서 공통: 마우스를 올리면 회색 바탕, 지금 위치는 강조색 */
+/* 회색 바탕 위에서는 흐린 글자(--muted)의 대비가 4.0:1로 모자라서, 그 안에서만 조금 밝은 회색(4.6:1)으로 바꾼다 */
+.tree-link:hover, .row:hover, .tag:hover, .tag-chip:hover, .tag-more:hover,
+.filter-chip:hover, .filter-reset:hover { background: var(--hover); --muted: #aeaba7; }
+
+/* ---------- 왼쪽 메뉴 ---------- */
+/* 태그가 많아져 메뉴가 화면보다 길어지면 메뉴 안에서 스크롤한다 */
+.sidebar { position: sticky; top: 32px; max-height: calc(100vh - 64px); overflow-y: auto; padding: 14px 12px; font-size: 15px; }
+
+.search-form { position: relative; }
+.search-form input {
+  width: 100%;
+  padding: 9px 36px 9px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  font: inherit;
+  color: var(--fg);
+  background: var(--inset);
+}
+.search-form input::placeholder { color: var(--muted); }
+.search-form input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.search-form input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+.search-clear {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.search-clear:hover { color: var(--fg); background: var(--hover); }
+.search-clear[hidden] { display: none; }
+
+.tree { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--panel-border); }
+.tree ul { list-style: none; margin: 0; padding: 0 0 0 16px; }
+.tree > ul { padding-left: 0; }
+.tree li { margin-top: 2px; }
+.tree-link { display: block; padding: 5px 10px 5px 26px; border-radius: 8px; }
+.tree-link.is-current, .tree-link.is-current:hover { font-weight: 700; color: var(--accent-text); background: var(--accent-soft); }
+.tree-link.is-current .count, .tag.is-current .count { color: var(--accent-text); }
+/* 화살표는 26×30 영역 전체가 눌린다. 분류 이름을 누르면 이동, 화살표를 누르면 열고 닫는다. */
+.tree summary { list-style: none; cursor: pointer; position: relative; }
+.tree summary::-webkit-details-marker { display: none; }
+.tree summary::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 26px;
+  height: 30px;
+  transform: translateY(-50%);
+  background-color: var(--muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
+  transition: transform .15s;
+}
+.tree summary:hover::before { background-color: var(--fg); }
+.tree details[open] > summary::before { transform: translateY(-50%) rotate(90deg); }
+
+.count { color: var(--muted); font-weight: 400; font-size: 13px; }
+
+/* ---------- 태그 모음: 글이 많은 태그일수록 크고 밝게 ---------- */
+.sidebar-tags { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--panel-border); }
+.tag-cloud { list-style: none; margin: 0; padding: 0 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 2px; }
+.tag { display: inline-block; padding: 2px 6px; border-radius: 6px; line-height: 1.4; }
+.tag-1 { font-size: 13px; color: var(--muted); }
+.tag-2 { font-size: 14px; color: #c8c5c0; }
+.tag-3 { font-size: 16px; font-weight: 600; color: var(--fg); }
+.tag-4 { font-size: 19px; font-weight: 700; color: var(--fg); }
+.tag.is-current, .tag.is-current:hover { color: var(--accent-text); background: var(--accent-soft); }
+.tag-more { display: inline-block; margin: 6px 4px 0; padding: 2px 6px; border-radius: 6px; font-size: 13px; color: var(--muted); }
+.list-panel .tag-cloud { padding: 14px 0 4px; gap: 6px 8px; }
+
+/* 리뷰 제목·작성일 아래 태그 */
+.post-tags { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: -8px 0 20px; padding: 0; }
+.tag-chip { display: inline-block; padding: 3px 11px; border: 1px solid var(--panel-border); border-radius: 999px; background: var(--inset); font-size: 14px; }
+
+/* ---------- 글 목록·검색 결과 ---------- */
+.list-panel { padding: 22px 26px; }
+
+.breadcrumb { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+.breadcrumb a:hover { color: var(--accent); }
+
+.list-title { font-size: 22px; line-height: 1.3; margin: 0 0 6px; padding-bottom: 14px; border-bottom: 1px solid var(--panel-border); }
+.list-title .count { font-size: 15px; margin-left: 2px; }
+
+.rows { list-style: none; margin: 0; padding: 0; }
+.rows li + li { border-top: 1px solid var(--panel-border); }
+/* 사진이 있든 없든 줄 높이는 84px로 같다. 긴 제목은 말줄임표로 자른다. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 84px;
+  margin: 0 -12px;
+  padding: 0 12px;
+  border-radius: 10px;
+}
+.thumb {
+  flex: none;
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--inset);
+}
+.row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.row-title, .row-meta { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.row-title { font-size: 17px; font-weight: 700; }
+.row-meta { font-size: 14px; color: var(--muted); }
+.row-date { flex: none; font-size: 13px; color: var(--muted); }
+/* 글자로 검색했을 때: 걸린 문장을 두 줄까지, 검색어는 강조색 */
+.row-excerpt { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.45; }
+.row-excerpt mark { color: var(--accent-text); background: none; font-weight: 600; }
+
+.empty, .search-status { color: var(--muted); }
+.empty { padding: 24px 0; margin: 0; }
+.text-link { color: var(--accent-text); text-decoration: underline; text-underline-offset: 3px; }
+/* 화면에는 안 보이고 화면 낭독기만 읽는 글자 */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.search-status { margin: 12px 0 6px; }
+.search-status[hidden] { display: none; }
+
+/* 검색 결과 위: 범위·검색어·고른 태그. 눌러서 하나씩 뺀다 */
+.filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 8px; }
+.filter-bar:empty { display: none; }
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--inset);
+  cursor: pointer;
+}
+.filter-chip .x { color: var(--muted); }
+.filter-reset { padding: 3px 8px; border: 0; border-radius: 999px; font: inherit; font-size: 14px; color: var(--muted); background: transparent; cursor: pointer; }
+
+/* ---------- 페이지 나누기 ---------- */
+.pager { display: flex; justify-content: center; gap: 6px; margin-top: 20px; }
+.pager:empty { display: none; }
+.pager-link {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+a.pager-link:not(.is-current):hover { color: var(--fg); background: var(--hover); }
+.pager-link.is-current { font-weight: 700; color: var(--on-accent); background: var(--accent); }
+.pager-link.is-disabled { opacity: .35; }
+.pager-gap { display: inline-grid; place-items: center; min-width: 20px; height: 34px; font-size: 14px; color: var(--muted); }
+
+/* ---------- 리뷰: 제목·사진·정보 표·본문을 패널 하나에 ---------- */
+.review { padding: 24px 28px; }
+.review h1 { font-size: 28px; line-height: 1.3; margin: 0; }
+.review-date { display: block; margin: 4px 0 20px; font-size: 14px; color: var(--muted); }
+
+.cover { display: block; max-width: 100%; max-height: 480px; width: auto; height: auto; margin-bottom: 20px; border-radius: 10px; }
+
+.info {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  padding: 8px 18px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--inset);
+  font-size: 15px;
+}
+.info th {
+  width: 1%;
+  padding: 4px 24px 4px 0;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  font-weight: 400;
+  color: var(--muted);
+}
+.info td { padding: 4px 0; }
+.info td.is-empty { color: var(--muted); }
+.info tbody + tbody tr:first-child > * { padding-top: 12px; border-top: 1px solid var(--panel-border); }
+.info tbody tr:last-child > * { padding-bottom: 12px; }
+
+.review-body { margin-top: 28px; }
+.review-body h2 { font-size: 19px; line-height: 1.4; color: var(--accent); margin: 0 0 8px; }
+.review-body h2:not(:first-child) { margin-top: 28px; }
+.review-body p { margin: 0 0 12px; }
+.review-body img { display: block; max-width: 100%; height: auto; margin: 16px 0; border-radius: 10px; }
+
+/* ---------- 좁은 화면 ---------- */
+@media (max-width: 720px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 16px; }
+  .sidebar { position: static; max-height: none; overflow: visible; }
+  .list-panel, .review { padding: 18px; }
+}
